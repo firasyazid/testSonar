@@ -1,0 +1,34 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+stages:
+  - build
+  - test
+  - run
+
+variables:
+  DOCKER_HOST: tcp://docker:2375/
+
+build:
+  stage: build
+  script:
+    - docker info
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t registry.gitlab.com/firasyazid/azuretest2 .
+    - docker images
+    - docker push registry.gitlab.com/firasyazid/azuretest2:latest
+
+test:
+  stage: test
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker run registry.gitlab.com/firasyazid/azuretest2 npm install --save-dev supertest jest
+    - docker run registry.gitlab.com/firasyazid/azuretest2 npm test
+
+run:
+  stage: run
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker run registry.gitlab.com/firasyazid/azuretest2
